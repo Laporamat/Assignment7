@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bank Smart Contract DApp (PK Mode)</title>
+    <title>Bank Smart Contract DApp (Auto-PK Mode)</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Ethers.js v5 CDN -->
@@ -18,20 +18,10 @@
                 <h1 class="text-xl font-bold text-blue-400">🏦 Bank Smart Contract DApp</h1>
                 <p class="text-sm text-slate-400">ผู้พัฒนา: <span class="text-yellow-400 font-medium">นาย ปรมัตถ์ เอี่ยมองค์ (66063709)</span></p>
             </div>
-        </header>
-
-        <!-- Private Key Input Section -->
-        <div class="bg-slate-800 p-5 rounded-xl border border-yellow-600/50 space-y-3">
-            <h2 class="text-lg font-semibold text-yellow-400">🔑 ใส่ Private Key (สำหรับเช็คยอดและจำลองบัญชี Demo)</h2>
-            <p class="text-xs text-slate-400">วาง Private Key ของกระเป๋า Testnet ลงที่นี่เพื่อดึงยอดเงินและ Address อัตโนมัติ</p>
-            <div class="flex gap-2">
-                <input id="privateKeyInput" type="password" placeholder="987368783f802ede482fb202821dd369c1db7e36390e321cb63b5dfaf7021eef" 
-                       class="w-full p-2 bg-slate-900 border border-slate-700 rounded text-sm text-white font-mono">
-                <button id="loadWalletBtn" class="bg-yellow-600 hover:bg-yellow-500 text-slate-950 font-bold px-4 py-2 rounded text-sm transition">
-                    โหลดกระเป๋า
-                </button>
+            <div class="bg-green-600/20 border border-green-500 text-green-400 px-3 py-1 rounded-full text-xs font-semibold">
+                ● Auto-Loaded Wallet
             </div>
-        </div>
+        </header>
 
         <!-- Wallet Account Details -->
         <div class="bg-slate-800 p-5 rounded-xl border border-slate-700">
@@ -39,7 +29,7 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                 <div class="bg-slate-900 p-3 rounded-lg border border-slate-800">
                     <p class="text-slate-500">Connected Address:</p>
-                    <p id="walletAddress" class="font-mono text-yellow-300 break-all">ยังไม่ได้โหลด Private Key</p>
+                    <p id="walletAddress" class="font-mono text-yellow-300 break-all">กำลังโหลดกระเป๋า...</p>
                 </div>
                 <div class="bg-slate-900 p-3 rounded-lg border border-slate-800">
                     <p class="text-slate-500">Wallet Sepolia ETH (ยอดในกระเป๋า):</p>
@@ -54,10 +44,11 @@
             <div class="bg-slate-800 p-5 rounded-xl border border-slate-700">
                 <h2 class="text-lg font-semibold text-slate-300 mb-2">⚙️ Smart Contract Config</h2>
                 <label class="block text-xs text-slate-400 mb-1">Contract Address (Sepolia Testnet)</label>
-                <input id="contractAddressInput" type="text" placeholder="0x..." 
+                <!-- ใส่ Contract Address ของคุณไว้ใน value ด้านล่างนี้ได้เลย หรือปล่อยให้มันจำค่าเริ่มต้น -->
+                <input id="contractAddressInput" type="text" value="" placeholder="0x..." 
                        class="w-full p-2 bg-slate-900 border border-slate-700 rounded text-sm text-white font-mono mb-3">
-                <button id="saveContractBtn" class="w-full bg-slate-700 hover:bg-slate-600 text-sm font-semibold py-2 rounded transition">
-                    บันทึก Contract Address
+                <button id="saveContractBtn" class="w-full bg-blue-600 hover:bg-blue-500 text-sm font-semibold py-2 rounded transition">
+                    เชื่อมต่อ Contract
                 </button>
             </div>
 
@@ -70,7 +61,7 @@
                 <div class="my-4 text-center">
                     <p id="bankBalance" class="text-3xl font-extrabold text-blue-400">0.0000 ETH</p>
                 </div>
-                <button id="checkBalanceBtn" class="w-full bg-blue-600 hover:bg-blue-500 font-semibold py-2 rounded text-sm transition">
+                <button id="checkBalanceBtn" class="w-full bg-slate-700 hover:bg-slate-600 font-semibold py-2 rounded text-sm transition">
                     🔄 ตรวจสอบยอดเงิน (Check Balance)
                 </button>
             </div>
@@ -101,7 +92,7 @@
 
     </div>
 
-    <!-- Script ควบคุมผ่าน Private Key -->
+    <!-- Script โหลดกระเป๋าและเชื่อมต่ออัตโนมัติ -->
     <script>
         const bankABI = [
             "function deposit() public payable",
@@ -110,15 +101,13 @@
         ];
 
         let provider, wallet, bankContract;
-
-        // ใช้ Public RPC ของ Sepolia สำหรับดึงข้อมูลและส่งธุรกรรมผ่าน PK
         const sepoliaRpcUrl = "https://rpc.ankr.com/eth_sepolia";
 
-        document.getElementById('loadWalletBtn').addEventListener('click', async () => {
-            let pk = document.getElementById('privateKeyInput').value.trim();
-            if (!pk) return alert("กรุณากรอก Private Key");
-            
-            // เติม 0x ด้านหน้าถ้ายังไม่มี
+        // โหลดข้อมูลกระเป๋าอัตโนมัติทันทีที่เปิดหน้าเว็บ
+        window.addEventListener('load', async () => {
+            // ---> 987368783f802ede482fb202821dd369c1db7e36390e321cb63b5dfaf7021eef <---
+            let pk = "987368783f802ede482fb202821dd369c1db7e36390e321cb63b5dfaf7021eef"; 
+
             if (!pk.startsWith("0x")) {
                 pk = "0x" + pk;
             }
@@ -127,16 +116,16 @@
                 provider = new ethers.providers.JsonRpcProvider(sepoliaRpcUrl);
                 wallet = new ethers.Wallet(pk, provider);
                 
+                // แสดง Address
                 document.getElementById('walletAddress').innerText = wallet.address;
                 
-                // ดึงยอดเงินในกระเป๋า
+                // ดึงยอดเงิน Sepolia ETH ในกระเป๋ามาแสดงทันที
                 const balance = await provider.getBalance(wallet.address);
                 document.getElementById('walletBalance').innerText = parseFloat(ethers.utils.formatEther(balance)).toFixed(4) + " ETH";
                 
-                alert("โหลดกระเป๋าสำเร็จ!");
-                initContract();
             } catch (err) {
-                alert("Private Key ไม่ถูกต้องหรือเกิดข้อผิดพลาด: " + err.message);
+                console.error("Auto-load wallet error:", err);
+                document.getElementById('walletAddress').innerText = "Private Key ไม่ถูกต้อง";
             }
         });
 
@@ -145,13 +134,15 @@
             if (address && wallet) {
                 bankContract = new ethers.Contract(address, bankABI, wallet);
                 getBankBalance();
+            } else {
+                alert("กรุณากรอก Contract Address ก่อนครับ");
             }
         }
 
         document.getElementById('saveContractBtn').addEventListener('click', initContract);
 
         async function getBankBalance() {
-            if (!bankContract) return alert("กรุณาโหลดกระเป๋าและใส่ Contract Address ก่อน");
+            if (!bankContract) return alert("กรุณาเชื่อมต่อ Contract ก่อน");
             try {
                 const balanceWei = await bankContract.checkBlance();
                 document.getElementById('bankBalance').innerText = parseFloat(ethers.utils.formatEther(balanceWei)).toFixed(4) + " ETH";
@@ -163,11 +154,11 @@
         document.getElementById('checkBalanceBtn').addEventListener('click', getBankBalance);
 
         document.getElementById('depositBtn').addEventListener('click', async () => {
-            if (!bankContract) return alert("ยังไม่ได้ตั้งค่า Contract");
+            if (!bankContract) return alert("ยังไม่ได้เชื่อมต่อ Contract");
             const amount = document.getElementById('depositAmount').value;
             try {
                 const tx = await bankContract.deposit({ value: ethers.utils.parseEther(amount) });
-                alert("กำลังส่งธุรกรรม...");
+                alert("กำลังส่งธุรกรรมฝากเงิน...");
                 await tx.wait();
                 alert("ฝากสำเร็จ!");
                 location.reload();
@@ -177,11 +168,11 @@
         });
 
         document.getElementById('withdrawBtn').addEventListener('click', async () => {
-            if (!bankContract) return alert("ยังไม่ได้ตั้งค่า Contract");
+            if (!bankContract) return alert("ยังไม่ได้เชื่อมต่อ Contract");
             const amount = document.getElementById('withdrawAmount').value;
             try {
                 const tx = await bankContract.withdraw(amount);
-                alert("กำลังส่งธุรกรรม...");
+                alert("กำลังส่งธุรกรรมถอนเงิน...");
                 await tx.wait();
                 alert("ถอนสำเร็จ!");
                 location.reload();
