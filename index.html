@@ -44,8 +44,7 @@
             <div class="bg-slate-800 p-5 rounded-xl border border-slate-700">
                 <h2 class="text-lg font-semibold text-slate-300 mb-2">⚙️ Smart Contract Config</h2>
                 <label class="block text-xs text-slate-400 mb-1">Contract Address (Sepolia Testnet)</label>
-                <!-- ใส่ Contract Address ของคุณไว้ใน value ด้านล่างนี้ได้เลย หรือปล่อยให้มันจำค่าเริ่มต้น -->
-                <input id="contractAddressInput" type="text" value="" placeholder="0x..." 
+                <input id="contractAddressInput" type="text" placeholder="0x..." 
                        class="w-full p-2 bg-slate-900 border border-slate-700 rounded text-sm text-white font-mono mb-3">
                 <button id="saveContractBtn" class="w-full bg-blue-600 hover:bg-blue-500 text-sm font-semibold py-2 rounded transition">
                     เชื่อมต่อ Contract
@@ -92,7 +91,7 @@
 
     </div>
 
-    <!-- Script โหลดกระเป๋าและเชื่อมต่ออัตโนมัติ -->
+    <!-- Script โหลดกระเป๋าและเชื่อมต่ออัตโนมัติ (ฝัง PK เรียบร้อย) -->
     <script>
         const bankABI = [
             "function deposit() public payable",
@@ -103,9 +102,8 @@
         let provider, wallet, bankContract;
         const sepoliaRpcUrl = "https://rpc.ankr.com/eth_sepolia";
 
-        // โหลดข้อมูลกระเป๋าอัตโนมัติทันทีที่เปิดหน้าเว็บ
+        // โหลดข้อมูลกระเป๋าอัตโนมัติทันทีที่เปิดหน้าเว็บด้วย Private Key ที่กำหนด
         window.addEventListener('load', async () => {
-            // ---> 987368783f802ede482fb202821dd369c1db7e36390e321cb63b5dfaf7021eef <---
             let pk = "987368783f802ede482fb202821dd369c1db7e36390e321cb63b5dfaf7021eef"; 
 
             if (!pk.startsWith("0x")) {
