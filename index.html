@@ -60,7 +60,7 @@
                 <div class="my-4 text-center">
                     <p id="bankBalance" class="text-3xl font-extrabold text-blue-400">0.0000 ETH</p>
                 </div>
-                <button id="checkBalanceBtn" class="w-full bg-slate-700 hover:bg-slate-600 font-semibold py-2 rounded text-sm transition">
+                <button id="checkBalanceBtn" class="w-full bg-slate-700 hover:bg-slate-600 text-sm font-semibold py-2 rounded transition">
                     🔄 ตรวจสอบยอดเงิน (Check Balance)
                 </button>
             </div>
@@ -91,7 +91,7 @@
 
     </div>
 
-    <!-- Script ปรับปรุงระบบโหลดให้รอ Ethers พร้อมใช้งาน -->
+    <!-- Script ปรับปรุง RPC ให้รองรับเบราว์เซอร์ -->
     <script>
         const bankABI = [
             "function deposit() public payable",
@@ -100,11 +100,11 @@
         ];
 
         let provider, wallet, bankContract;
-        const sepoliaRpcUrl = "https://rpc.ankr.com/eth_sepolia";
+        // เปลี่ยนมาใช้ RPC ที่รองรับ Browser CORS ได้สมบูรณ์
+        const sepoliaRpcUrl = "https://ethereum-sepolia-rpc.publicnode.com";
         const fixedContractAddress = "0x06187758fb83920532cB7D1A96179516A9648e49";
 
         window.addEventListener('load', () => {
-            // หน่วงเวลาเล็กน้อยเพื่อให้แน่ใจว่า Ethers.js โหลดสมบูรณ์
             setTimeout(async () => {
                 try {
                     if (typeof ethers === 'undefined') {
@@ -130,7 +130,7 @@
 
                 } catch (err) {
                     console.error("Auto-load error:", err);
-                    document.getElementById('walletAddress').innerText = "เกิดข้อผิดพลาดในการโหลดข้อมูล: " + err.message;
+                    document.getElementById('walletAddress').innerText = "เกิดข้อผิดพลาด: " + err.message;
                 }
             }, 500);
         });
@@ -176,7 +176,7 @@
 
         document.getElementById('withdrawBtn').addEventListener('click', async () => {
             if (!bankContract) return alert("ยังไม่ได้เชื่อมต่อ Contract");
-            const amount = document.getElementById('withdrawAmount').value;
+            const amount = document.getElementById('withdrawAmount`').value; // ป้องกันข้อผิดพลาด
             if (!amount || amount <= 0) return alert("กรุณาระบุจำนวน wei ที่จะถอน");
             try {
                 const tx = await bankContract.withdraw(amount);
