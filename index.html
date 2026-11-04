@@ -91,7 +91,7 @@
 
     </div>
 
-    <!-- Script โหลดอัตโนมัติทั้ง PK และ Contract Address -->
+    <!-- Script ปรับปรุงระบบโหลดให้รอ Ethers พร้อมใช้งาน -->
     <script>
         const bankABI = [
             "function deposit() public payable",
@@ -101,33 +101,38 @@
 
         let provider, wallet, bankContract;
         const sepoliaRpcUrl = "https://rpc.ankr.com/eth_sepolia";
-        
-        // ฝัง Contract Address ที่กำหนดไว้ล่วงหน้า
         const fixedContractAddress = "0x06187758fb83920532cB7D1A96179516A9648e49";
 
-        window.addEventListener('load', async () => {
-            let pk = "0x987368783f802ede482fb202821dd369c1db7e36390e321cb63b5dfaf7021eef"; 
+        window.addEventListener('load', () => {
+            // หน่วงเวลาเล็กน้อยเพื่อให้แน่ใจว่า Ethers.js โหลดสมบูรณ์
+            setTimeout(async () => {
+                try {
+                    if (typeof ethers === 'undefined') {
+                        throw new Error("Ethers.js library not loaded");
+                    }
 
-            try {
-                provider = new ethers.providers.JsonRpcProvider(sepoliaRpcUrl);
-                wallet = new ethers.Wallet(pk, provider);
-                
-                // แสดง Address และยอดเงินในกระเป๋า
-                document.getElementById('walletAddress').innerText = wallet.address;
-                const balance = await provider.getBalance(wallet.address);
-                document.getElementById('walletBalance').innerText = parseFloat(ethers.utils.formatEther(balance)).toFixed(4) + " ETH";
-                
-                // ใส่ Contract Address ลงในช่อง input อัตโนมัติ
-                document.getElementById('contractAddressInput').value = fixedContractAddress;
+                    let pk = "0x987368783f802ede482fb202821dd369c1db7e36390e321cb63b5dfaf7021eef"; 
 
-                // เชื่อมต่อ Contract และดึงยอดเงินในธนาคารทันที
-                bankContract = new ethers.Contract(fixedContractAddress, bankABI, wallet);
-                getBankBalance();
+                    provider = new ethers.providers.JsonRpcProvider(sepoliaRpcUrl);
+                    wallet = new ethers.Wallet(pk, provider);
+                    
+                    // แสดง Address และยอดเงินในกระเป๋า
+                    document.getElementById('walletAddress').innerText = wallet.address;
+                    const balance = await provider.getBalance(wallet.address);
+                    document.getElementById('walletBalance').innerText = parseFloat(ethers.utils.formatEther(balance)).toFixed(4) + " ETH";
+                    
+                    // ใส่ Contract Address ลงในช่อง input อัตโนมัติ
+                    document.getElementById('contractAddressInput').value = fixedContractAddress;
 
-            } catch (err) {
-                console.error("Auto-load error:", err);
-                document.getElementById('walletAddress').innerText = "เกิดข้อผิดพลาดในการโหลดข้อมูล";
-            }
+                    // เชื่อมต่อ Contract และดึงยอดเงินในธนาคารทันที
+                    bankContract = new ethers.Contract(fixedContractAddress, bankABI, wallet);
+                    getBankBalance();
+
+                } catch (err) {
+                    console.error("Auto-load error:", err);
+                    document.getElementById('walletAddress').innerText = "เกิดข้อผิดพลาดในการโหลดข้อมูล: " + err.message;
+                }
+            }, 500);
         });
 
         function initContract() {
