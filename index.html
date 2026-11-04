@@ -60,7 +60,7 @@
                 <div class="my-4 text-center">
                     <p id="bankBalance" class="text-3xl font-extrabold text-blue-400">0.0000 ETH</p>
                 </div>
-                <button id="checkBalanceBtn" class="w-full bg-slate-700 hover:bg-slate-600 text-sm font-semibold py-2 rounded transition">
+                <button id="checkBalanceBtn" class="w-full bg-slate-700 hover:bg-slate-600 font-semibold py-2 rounded text-sm transition">
                     🔄 ตรวจสอบยอดเงิน (Check Balance)
                 </button>
             </div>
@@ -91,7 +91,7 @@
 
     </div>
 
-    <!-- Script ปรับปรุง RPC ให้รองรับเบราว์เซอร์ -->
+    <!-- Script แก้ไขการระบุ Network Explicitly ให้ Ethers.js -->
     <script>
         const bankABI = [
             "function deposit() public payable",
@@ -100,7 +100,6 @@
         ];
 
         let provider, wallet, bankContract;
-        // เปลี่ยนมาใช้ RPC ที่รองรับ Browser CORS ได้สมบูรณ์
         const sepoliaRpcUrl = "https://ethereum-sepolia-rpc.publicnode.com";
         const fixedContractAddress = "0x06187758fb83920532cB7D1A96179516A9648e49";
 
@@ -113,7 +112,9 @@
 
                     let pk = "0x987368783f802ede482fb202821dd369c1db7e36390e321cb63b5dfaf7021eef"; 
 
-                    provider = new ethers.providers.JsonRpcProvider(sepoliaRpcUrl);
+                    // ระบุ Network ชัดเจนเพื่อแก้ปัญหา noNetwork Error
+                    const sepoliaNetwork = { name: "sepolia", chainId: 11155111 };
+                    provider = new ethers.providers.JsonRpcProvider(sepoliaRpcUrl, sepoliaNetwork);
                     wallet = new ethers.Wallet(pk, provider);
                     
                     // แสดง Address และยอดเงินในกระเป๋า
@@ -176,7 +177,7 @@
 
         document.getElementById('withdrawBtn').addEventListener('click', async () => {
             if (!bankContract) return alert("ยังไม่ได้เชื่อมต่อ Contract");
-            const amount = document.getElementById('withdrawAmount`').value; // ป้องกันข้อผิดพลาด
+            const amount = document.getElementById('withdrawAmount').value;
             if (!amount || amount <= 0) return alert("กรุณาระบุจำนวน wei ที่จะถอน");
             try {
                 const tx = await bankContract.withdraw(amount);
